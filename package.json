@@ -1,0 +1,26 @@
+{
+  "name": "dev0016-vermillionbadger",
+  "version": "0.0.1-alpha",
+  "description": "An interactive particle simulation for your mind",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "start": "webpack -d --progress --colors --watch --config ./config/webpack.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seamusfoley/STFDEV0001-VermillionBadger.git"
+  },
+  "author": "Seamus Foley",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/seamusfoley/STFDEV0001-VermillionBadger/issues"
+  },
+  "homepage": "https://github.com/seamusfoley/STFDEV0001-VermillionBadger#readme",
+  "devDependencies": {
+    "glslify": "^6.0.2",
+    "raw-loader": "^0.5.1",
+    "to-string": "^0.2.0",
+    "webpack": "^2.4.1"
+  }
+}
