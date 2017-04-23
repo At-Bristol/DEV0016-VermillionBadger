@@ -16,6 +16,7 @@ var App = function() {
     var _tourMode = false;
     var _musicElem = document.getElementById("music");
     var _params = Params;
+    var _interactionPoint;
 
     /* DEFINES
 
@@ -49,7 +50,7 @@ var App = function() {
 
     var _presets = {
         "none":    { "user gravity":1.9, "shape gravity":1, _shape:"" },
-        "sphere":  { "user gravity":1.9, "shape gravity":0.02, _shape:"SIM_SPHERE" },
+        "sphere":  { "user gravity":1.9, "shape gravity":0.2, _shape:"SIM_SPHERE" },
         //"bison":   { "user gravity":3, "shape gravity":5, _shape:_meshes.bison },
         //"wolf":    { "user gravity":3, "shape gravity":5, _shape:_meshes.wolf },
     };
@@ -223,12 +224,20 @@ var App = function() {
 
     var _initKeyboard = function() {
 
-        // pause simulation
+      // change interaction point
+     Mousetrap.bind(["1","2","3","4","5","6","7","8"], function(e) {
+          _engine.changeInteractionPoint(e.key);
+          return false;
+      },"keydown");
+
+
+        // pause simulationWWWwwwwwww
         Mousetrap.bind("space", function() {
+            console.log('space');
             _guiFields.paused = !_guiFields.paused;
             _engine.pauseSimulation(_guiFields.paused);
             return false;
-        });
+        },"keydown");
 
         // mouse camera control
         Mousetrap.bind(["alt", "option"], function() {
@@ -236,6 +245,7 @@ var App = function() {
             _engine.enableCameraControl(true);
             return false;
         }, "keydown");
+
         Mousetrap.bind(["alt", "option"], function() {
             _guiFields["camera control"] = false;
             _engine.enableCameraControl(false);

@@ -15,7 +15,7 @@ var ParticleShader = {
         "tPos": { type: "t", value: 0.0 },
         "uTime" : { type: "f", value: 0.0 },
         "uPointSize": { type: "f", value: 100.0 },
-        "uAlpha": { type: "f", value: 0.03 },
+        "uAlpha": { type: "f", value: 0.072 },
         "uColor1": { type: "v3", value: new THREE.Vector3(1.0, 0.6, 0.1) },
         "uColor2": { type: "v3", value: new THREE.Vector3(1.0, 0.4, 1.0) },
         "uColorFreq": { type: "f", value: 1.0 },

@@ -26,6 +26,7 @@ var ParticleEngine = function(params) {
     // PARAMS
 
     params = params || {};
+    var _interactionPoint = params.interactionPoint || 1;
     var _size  = params.size || 1024;
     var _simMat = params.simMat || createShaderMaterial(BasicSimShader);
     var _initMat = params.initMat || createShaderMaterial(SimInitShader);
@@ -117,32 +118,36 @@ var ParticleEngine = function(params) {
     };
 
     var _mouseUpdate = function() {
-        var mIdMax = Utils.isMobile ? 4 : 4;
-        for (var mId=0; mId<mIdMax; mId++) {
-            var ms = _mouse.getMouse(mId);
-            //raycast tp find gravity point
-            if (ms.buttons[0] || (mId===0 && ms.buttons[2])) {
+        _interactionPoint
+        var ms = _mouse.getMouse(0);
+        //raycast tp find gravity point
+        if (ms.buttons[0] || (ms.buttons[2])) {
 
-                _raycaster.setFromCamera(ms.coords, _camera);
-                // from target point to camera
-                var pos = _controls.target;
-                var nor = pos.clone().sub(_camera.position).normalize();
-                var plane = new THREE.Plane(
-                    nor, -nor.x*pos.x - nor.y*pos.y - nor.z*pos.z
-                );
+            _raycaster.setFromCamera(ms.coords, _camera);
+            // from target point to camera
+            var pos = _controls.target;
+            var nor = pos.clone().sub(_camera.position).normalize();
+            var plane = new THREE.Plane(
+                nor, -nor.x*pos.x - nor.y*pos.y - nor.z*pos.z
+            );
 
-                // intersect plane
-                var point = _raycaster.ray.intersectPlane(plane);
-                //point = {x:1.0,y:0.0,z:0.0};
+            // intersect plane
+            var point = _raycaster.ray.intersectPlane(plane);
+            //point = {x:1.0,y:0.0,z:0.0};
 
 
-                _simMat.uniforms.uInputPos.value[mId].copy(point);
-                _simMat.uniforms.uInputPosAccel.value.setComponent(mId, ms.buttons[0] ? 1.0 : -1.0);
-            }
-            else {
-                _simMat.uniforms.uInputPosAccel.value.setComponent(mId, 0);
-            }
+            _simMat.uniforms.uInputPos.value[0].copy(point);
+
+            _simMat.uniforms.uInputPosAccel.value.set(
+               ms.buttons[0] ? 1.0 : -1.0,  0,  0,  0
+            );
+
+            console.log(_simMat.uniforms.uInputPosAccel.value);
         }
+        else {
+          _simMat.uniforms.uInputPosAccel.value.set(0,0,0,0);
+        }
+
 
         // _debugBox.innerHTML +=
         //     "<br>"+_simMat.uniforms.uInputPosAccel.value.x.toFixed(2)
@@ -203,6 +208,11 @@ var ParticleEngine = function(params) {
 
     this.enableCameraControl = function(value) {
         _controls.enabled = value;
+    };
+
+    this.changeInteractionPoint = function(value){11
+        console.log(_interactionPoint);
+        _interactionPoint = value;
     };
 
 

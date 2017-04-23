@@ -1,10 +1,3 @@
-/**
- * params = {
- *   simMat: THREE.Material,
- *   initMat: THREE.Material,
- *   drawMat: THREE.Material
- * }
- */
 
 import SimulationRenderer from './SimulationRenderer'
 import { createShaderMaterial } from './ShaderPass'
