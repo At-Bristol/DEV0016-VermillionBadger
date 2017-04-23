@@ -4,29 +4,33 @@ import SimShader from './shaders/SimShader'
 import ParticleShader from './shaders/ParticleShader'
 import ParticleEngine from './ParticleEngine'
 import UVMapAnimator from './UVMapAnimator'
+import Params from './Params'
 
 
 var App = function() {
     var _gui, _guiFields;
     var _engine;
-    var _currPreset = Utils.getParameterByName("shape") || "none"; // initial preset
+    var _currPreset = Utils.getParameterByName("shape") || "sphere"; // initial preset
     var _currSimMode;
     var _uvAnim;
     var _tourMode = false;
     var _musicElem = document.getElementById("music");
+    var _params = Params;
 
-    // DEFINES
+    /* DEFINES
 
     var _params = {
-        size:1024,
+        size:2048,
         simMat: createShaderMaterial(SimShader),
         drawMat: createShaderMaterial(ParticleShader),
         update: undefined,  // defined later in the file
-    };
+        autoRotateSpeed: 4.0,
+        cameraDistance: 25,
+        partcleAlpha: 0.025
+    };*/
 
     var _simModes = [
         "SIM_PLANE",
-        "SIM_CURIOUS",
         //"SIM_DISC",
         "SIM_SPHERE",
         //"SIM_BALL",
@@ -39,33 +43,14 @@ var App = function() {
     // must have same name as preset, for async loading to work properly
     var _meshes = {
         bear:      { scale:0.023, yOffset:-2.30, speed:0.05, url:"models/curious.json" },
-        //bison:     { scale:0.020, yOffset:-2.00, speed:0.10, url:"models/bison.json" },
         curious:   { scale:0.020, yOffset:-2.00, speed:0.10, url:"models/curious.json" },
         deer:      { scale:0.040, yOffset:-2.00, speed:0.10, url:"models/deer.json" },
-        // dog:       { scale:0.040, yOffset:-1.65, speed:0.10, url:"models/retriever.json" },
-        // fox:       { scale:0.070, yOffset:-1.50, speed:0.10, url:"models/fox.json" },
-        //horse:     { scale:0.022, yOffset:-2.30, speed:0.08, url:"models/horse.json" },
-        //panther:   { scale:0.030, yOffset:-1.70, speed:0.10, url:"models/panther.json" },
-        // rabbit:    { scale:0.040, yOffset:-1.00, speed:0.05, url:"models/rabbit.json" },
-        //wolf:      { scale:0.040, yOffset:-1.70, speed:0.10, url:"models/wolf.json" },
     };
 
     var _presets = {
-        "none":    { "user gravity":3, "shape gravity":1, _shape:"" },
-        "curious": { "user gravity":4, "shape gravity":5, _shape:"SIM_CURIOUS" },
-        // "noise":   { "user gravity":3, "shape gravity":1, _shape:"SIM_NOISE" },
-        "plane":   { "user gravity":4, "shape gravity":3, _shape:"SIM_PLANE" },
-        "sphere":  { "user gravity":4, "shape gravity":3, _shape:"SIM_SPHERE" },
-        //"galaxy":  { "user gravity":3, "shape gravity":1, _shape:"SIM_GALAXY" },
-        //"petals":  { "user gravity":3, "shape gravity":2, _shape:"SIM_ROSE_GALAXY" },
-        "bear":    { "user gravity":3, "shape gravity":5, _shape:_meshes.bear },
+        "none":    { "user gravity":1.9, "shape gravity":1, _shape:"" },
+        "sphere":  { "user gravity":1.9, "shape gravity":0.02, _shape:"SIM_SPHERE" },
         //"bison":   { "user gravity":3, "shape gravity":5, _shape:_meshes.bison },
-        // "deer":    { "user gravity":3, "shape gravity":5, _shape:_meshes.deer },
-        // "dog":     { "user gravity":3, "shape gravity":5, _shape:_meshes.dog },
-        // "fox":     { "user gravity":3, "shape gravity":5, _shape:_meshes.fox },
-        //"horse":   { "user gravity":3, "shape gravity":5, _shape:_meshes.horse },
-        //"panther": { "user gravity":3, "shape gravity":5, _shape:_meshes.panther },
-        // "rabbit":  { "user gravity":3, "shape gravity":5, _shape:_meshes.rabbit },
         //"wolf":    { "user gravity":3, "shape gravity":5, _shape:_meshes.wolf },
     };
 
@@ -96,12 +81,12 @@ var App = function() {
             _uvAnim.setMesh();  // set no mesh
         }
         else {
-            _setSimMode("SIM_TEXTURE");
+            _setSimMode("SIM_SPHERE");
             _uvAnim.setMesh(preset._shape.mesh);
         }
 
-        _guiFields["user gravity"]  = _params.simMat.uniforms.uInputAccel.value = preset["user gravity"];
-        _guiFields["shape gravity"] = _params.simMat.uniforms.uShapeAccel.value = preset["shape gravity"];
+        _guiFields["user gravity"]  = _params.simMat.uniforms.uInputAccel.value = _params.inputAccel;
+        _guiFields["shape gravity"] = _params.simMat.uniforms.uShapeAccel.value = _params.shapeAccel;
     };
 
     var _takeScreenshot = function() {
@@ -110,15 +95,6 @@ var App = function() {
             Utils.openUrlInNewWindow(url, window.innerWidth, window.innerHeight);
         });
     };
-
-    var _toggleMusic = function() {
-        if (_musicElem.paused)
-            _musicElem.play();
-        else
-            _musicElem.pause();
-    };
-
-
 
     // UPDATE
 
@@ -132,7 +108,7 @@ var App = function() {
         var SHAPE_DURATION = 25.0;
         var BETWEEN_DURATION = 15.0;
         var BETWEEN_PRESET = "galaxy";
-        var sequence = ["curious","petals", "sphere"];
+        var sequence = ["none"];
         var timer = 0.0;
         var seqIdx = 0;
         var seqName;
@@ -210,27 +186,10 @@ var App = function() {
         });
 
         var fAppearance = _gui.addFolder("Appearance");
-        fAppearance.addColor(_guiFields, "color1").onChange(function(value) {
-            if (value[0] === "#") value = Utils.hexToRgb(value);
-            _params.drawMat.uniforms.uColor1.value.x = value[0] / 255.0;
-            _params.drawMat.uniforms.uColor1.value.y = value[1] / 255.0;
-            _params.drawMat.uniforms.uColor1.value.z = value[2] / 255.0;
-        });
-        fAppearance.addColor(_guiFields, "color2").onChange(function(value) {
-            if (value[0] === "#") value = Utils.hexToRgb(value);
-            _params.drawMat.uniforms.uColor2.value.x = value[0] / 255.0;
-            _params.drawMat.uniforms.uColor2.value.y = value[1] / 255.0;
-            _params.drawMat.uniforms.uColor2.value.z = value[2] / 255.0;
-        });
-        fAppearance.add(_guiFields, "alpha", 0, 1).onChange(function(value) {
+        fAppearance.add(_guiFields, "alpha", 0, 0.5).onChange(function(value) {
             _params.drawMat.uniforms.uAlpha.value = value;
         });
-        fAppearance.add(_guiFields, "color speed", -10, 10).onChange(function(value) {
-            _params.drawMat.uniforms.uColorSpeed.value = value;
-        });
-        fAppearance.add(_guiFields, "color freq", 0, 5).onChange(function(value) {
-            _params.drawMat.uniforms.uColorFreq.value = value;
-        });
+
         fAppearance.add(_guiFields, "point size", 1, 10).onChange(function(value) {
             _params.drawMat.uniforms.uPointSize.value = value;
         });

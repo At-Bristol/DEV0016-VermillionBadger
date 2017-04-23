@@ -239,13 +239,11 @@ uniform sampler2D tCurr;
 uniform float uDeltaT;
 uniform float uTime;
 uniform vec3 uInputPos[4];
+uniform vec3 uGravityWellPos;
 uniform vec4 uInputPosAccel;
 uniform float uInputAccel;
 uniform float uShapeAccel;
 
-#ifdef SIM_TEXTURE
-uniform sampler2D tTarget;
-#endif
 
 void main() {
 
@@ -259,28 +257,6 @@ void main() {
     vec3 accel = vec3(0.0);
 
     {
-    #ifdef SIM_PLANE
-        vec2 coords = vUv * 2.0 - 1.0;
-        vec3 targetPos = vec3(coords.x, 0.0, coords.y);
-        targetPos *= 3.0;
-    #endif
-
-    #ifdef SIM_CUBE
-        vec3 targetPos = vec3(vUv.x, vUv.y, rand(vUv)) * 2.0 - 1.0;
-        targetPos *= 2.0;
-    #endif
-
-    #ifdef SIM_DISC
-        // cylindrical coords
-        float radius = vUv.y;
-        float theta = vUv.x * M_2PI;
-        vec3 targetPos = vec3(
-            radius * sin(theta),
-            0.0,
-            radius * cos(theta)
-        );
-        targetPos *= 3.0;
-    #endif
 
     #ifdef SIM_SPHERE
         // sphere, continuous along vUv.y
@@ -298,140 +274,26 @@ void main() {
         targetPos *= 2.0;
     #endif
 
-    #ifdef SIM_BALL
-        // sphere coords, rand radius, offset y+0.5 for snoise vel
-        vec2 coords = vUv;
-        coords.x = coords.x * M_2PI - M_PI;
-        coords.y = coords.y * M_PI;
-        vec3 sphereCoords = vec3(
-            sin(coords.y) * cos(coords.x),
-            cos(coords.y),
-            sin(coords.y) * sin(coords.x)
-        );
-        vec3 targetPos = sphereCoords * rand(vUv);
-        targetPos *= 2.0;
-    #endif
-
     #if defined(SIM_PLANE) || defined(SIM_SPHERE) || defined(SIM_BALL) || defined(SIM_CUBE) || defined(SIM_DISC)
         vec3 toTarget = targetPos - currPos;
         float toTargetLength = length(toTarget);
         if (!EQUALSZERO(toTargetLength))
             accel += uShapeAccel * toTarget/toTargetLength;
     #endif
+
     }
 
-    #ifdef SIM_NOISE
-        accel += 0.2 * uShapeAccel * curlNoise(currPos);
-    #endif
-
-    #ifdef SIM_ROSE_GALAXY
-    {
-        // cylindrical coords
-        float radius = vUv.y;
-        float theta = vUv.x * M_2PI;
-
-        // outward spiral function
-        radius *= M_PI;
-        vec3 targetPos = vec3(
-            radius * sin(theta),
-            radius*radius * sin(4.0*theta + sin(3.0*M_PI*radius+uTime/2.0)) / 10.0,
-            radius * cos(theta)
-        );
-
-        vec3 toTarget = targetPos - currPos;
-        float toTargetLength = length(toTarget);
-        accel += uShapeAccel * toTarget/toTargetLength;
-    }
-    #endif
-
-    {
-    #ifdef SIM_GALAXY
-
-    #define K_NUM_ARMS 7.0
-    #define K_HEIGHT 0.5
-    #define K_SPIN_SPEED 0.25
-
-    #define K_NOISE_ACCEL 0.1
-
-    // cylindrical coords
-    float radius = vUv.y;
-    float theta = vUv.x * M_2PI;
-
-    float randVal = rand(vec2(theta, radius));
-
-    // jitter coords
-    radius += randVal * 0.5;
-    theta += randVal * 0.5;
-
-    float radialArms = sin(K_NUM_ARMS * theta);
-
-    float taperComponent = cos(0.6*radius*M_PI/2.0);
-    taperComponent *= taperComponent;
-    float heightParam = K_HEIGHT                              // height constant
-                      * (rand(vec2(radius, theta))-0.5)   // provide unit thickness with rand
-                      * taperComponent;                 // taper along radius using cosine curve
-
-    float spinParam = theta                   // angle parameter
-                    + radius*radius           // twist at rate r^2
-                    - K_SPIN_SPEED * uTime;   // spin at constant speed
-
-    vec3 targetPos = vec3(
-        radius * sin(spinParam),
-        heightParam,
-        radius * cos(spinParam)
-    );
-    targetPos *= 3.0;
-
-    vec3 toTarget = targetPos - currPos;
-    float toTargetLength = length(toTarget);
-    accel += uShapeAccel * toTarget/toTargetLength
-        * (radialArms/2.0+0.5)  // gravity stronger in arms
-        * randVal;    // randomize gravity prevents banding
-
-
-    // noise
-    float noiseTime = uTime;
-    accel += K_NOISE_ACCEL * curlNoise(currPos);// + vec3(sin(noiseTime), cos(noiseTime), sin(noiseTime)*cos(noiseTime)));
-
-    #endif
-    }
-
-    {
-    #ifdef SIM_TEXTURE
-
-    #define K_NOISE_ACCEL 0.1
-    #define K_UV_OFFSET 0.02
-
-    // jitter uv
-    vec2 uvOffset = vec2(
-        rand(vec2(vUv.x, vUv.y+uTime)),
-        rand(vec2(vUv.x+uTime, vUv.y))
-    );
-
-    vec4 targetCol = texture2D(tTarget, vUv + uvOffset*K_UV_OFFSET);
-
-    if (targetCol.a > 0.0) {
-        vec3 toTarget = targetCol.rgb - currPos;
-        float toTargetLength = length(toTarget);
-        if (!EQUALSZERO(toTargetLength))
-            accel += uShapeAccel * toTarget/toTargetLength;
-    }
-    else {
-        accel += K_NOISE_ACCEL * curlNoise(currPos);
-    }
-    #endif
-    }
 
     {
 
     #define PROCESS_INPUT_POS(ACC, POS) if ((ACC) != 0.0) { vec3 toCenter = (POS)-currPos; float toCenterLength = length(toCenter); accel += (toCenter/toCenterLength) * (ACC)*uInputAccel/toCenterLength; }
 
     PROCESS_INPUT_POS(uInputPosAccel.x, uInputPos[0]);
-    #ifdef MULTIPLE_INPUT
-        PROCESS_INPUT_POS(uInputPosAccel.y, uInputPos[1]);
-        PROCESS_INPUT_POS(uInputPosAccel.z, uInputPos[2]);
-        PROCESS_INPUT_POS(uInputPosAccel.w, uInputPos[3]);
-    #endif
+    //#ifdef MULTIPLE_INPUT
+    PROCESS_INPUT_POS(uInputPosAccel.y, uInputPos[1]);
+    PROCESS_INPUT_POS(uInputPosAccel.z, uInputPos[2]);
+    PROCESS_INPUT_POS(uInputPosAccel.w, uInputPos[3]);
+    //#endif
     }
 
     // state updates

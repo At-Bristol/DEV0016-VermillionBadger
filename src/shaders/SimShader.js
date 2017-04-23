@@ -18,7 +18,7 @@ var SimShader = {
         "uTime": { type: "f", value: 0.0 },
         "uInputPos": { type: "v3v", value: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()] },
         "uInputPosAccel": { type: "v4", value: new THREE.Vector4(0,0,0,0) },
-        "uInputAccel": { type: "f", value: 3.0 },
+        "uInputAccel": { type: "f", value: 1.9 },
         "uShapeAccel": { type: "f", value: 1.0 },
     },
 
@@ -42,7 +42,7 @@ var BasicSimShader = {
         "tCurr": { type: "t", value: null },
         "uDeltaT": { type: "f", value: 0.0 },
         "uTime": { type: "f", value: 0.0 },
-        "uInputPos": { type: "v3v", value: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()] },
+        "uInputPos": { type: "v3v", value: [new THREE.Vector3(100,0,0), new THREE.Vector3(0,100,0), new THREE.Vector3(100,0,0), new THREE.Vector3()] },
         "uInputPosAccel": { type: "v4", value: new THREE.Vector4(0,0,0,0) },
     },
 

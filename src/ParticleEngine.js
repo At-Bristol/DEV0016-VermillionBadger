@@ -30,7 +30,10 @@ var ParticleEngine = function(params) {
     var _simMat = params.simMat || createShaderMaterial(BasicSimShader);
     var _initMat = params.initMat || createShaderMaterial(SimInitShader);
     var _drawMat = params.drawMat || createShaderMaterial(BasicParticleShader);
+    var _autoRotateSpeed = params.autoRotateSpeed || 1.5;
+    var _cameraDistance = params.cameraDistance || 25;
     var _customUpdate = params.update;
+    var _particleAlpha = params.particleAlpha;
 
 
     // EVENTS
@@ -92,11 +95,11 @@ var ParticleEngine = function(params) {
         });
         _scene.add(_sim.getParticleObject());
 
-        _camera.position.set(0,0,8);
+        _camera.position.set(0,0,_cameraDistance);
         _controls = new THREE.OrbitControls(_camera, _canvas);
         _controls.rotateUp(Math.PI/6);
         _controls.autoRotate = true;
-        _controls.autoRotateSpeed = 1.0;
+        _controls.autoRotateSpeed = _autoRotateSpeed;
         _controls.noPan = true;
         _controls.enabled = false;  // disable user input
 
@@ -113,8 +116,8 @@ var ParticleEngine = function(params) {
         var _debugBox = document.querySelector("#debug-box");
     };
 
-    var _mouseUpdate = function() {;
-        var mIdMax = Utils.isMobile ? 4 : 1;
+    var _mouseUpdate = function() {
+        var mIdMax = Utils.isMobile ? 4 : 4;
         for (var mId=0; mId<mIdMax; mId++) {
             var ms = _mouse.getMouse(mId);
             //raycast tp find gravity point
@@ -130,7 +133,7 @@ var ParticleEngine = function(params) {
 
                 // intersect plane
                 var point = _raycaster.ray.intersectPlane(plane);
-                //point = {x:0.0,y:0.0,z:0.0}
+                //point = {x:1.0,y:0.0,z:0.0};
 
 
                 _simMat.uniforms.uInputPos.value[mId].copy(point);
