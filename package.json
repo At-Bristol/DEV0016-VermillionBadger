@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "test",
-    "start": "webpack -d --progress --colors --watch --config ./config/webpack.config.js"
+    "start": "webpack -d --progress --colors --watch --config ./config/webpack.config.js",
+    "server": "node ./server/index.js"
+
   },
   "repository": {
     "type": "git",
@@ -21,6 +23,7 @@
     "glslify": "^6.0.2",
     "raw-loader": "^0.5.1",
     "to-string": "^0.2.0",
-    "webpack": "^2.4.1"
+    "webpack": "^2.4.1",
+    "windows": "0.0.6"
   }
 }

@@ -8,7 +8,10 @@ import LeapManager from './LeapManager'
 import Utils from './Utils'
 import Gravitywell from './Gravitywell'
 
+
 var ParticleEngine = function(params) {
+
+   var client = new WebSocket('ws://127.0.0.1:1234', 'echo-protocol');
 
     var _this = this;
 
@@ -21,6 +24,7 @@ var ParticleEngine = function(params) {
     var _leapMan;
     var _customUpdate;
     var _pauseSim = false;
+    var _coords = '{"x":0, "y":0, "z":0}';
 
 
     // PARAMS
@@ -46,7 +50,7 @@ var ParticleEngine = function(params) {
     var _onFrameUpdate = function(dt, t) {
         _stats.begin();
 
-        _leapUpdate();
+        //_leapUpdate();
 
         _inputUpdate();
 
@@ -55,7 +59,7 @@ var ParticleEngine = function(params) {
         if(_customUpdate) _customUpdate(dt, t);
 
         _renderer.update(dt);
-        _leapMan.render();
+        //_leapMan.render();
 
         _stats.end();
     };
@@ -121,31 +125,49 @@ var ParticleEngine = function(params) {
         _interactionPoint
         var ms = _mouse.getMouse(0);
         //raycast tp find gravity point
+        var point = JSON.parse(_coords);
+        var hand = point.w
+        delete point.z;
+        delete point.w;
+        var s = 1.2;
+        point.x = point.x * s;
+        point.y = point.y * s;
+
+
+        _raycaster.setFromCamera(point, _camera);
+        // from target point to camera
+        var pos = _controls.target;
+        var nor = pos.clone().sub(_camera.position).normalize();
+        var plane = new THREE.Plane(
+            nor, -nor.x*pos.x - nor.y*pos.y - nor.z*pos.z
+        );
+
+        // intersect plane
+        var points = _raycaster.ray.intersectPlane(plane);
+        //point = _coords ? _coords : {x:0.0,y:0.0,z:0.0};
+
         if (ms.buttons[0] || (ms.buttons[2])) {
 
-            _raycaster.setFromCamera(ms.coords, _camera);
-            // from target point to camera
-            var pos = _controls.target;
-            var nor = pos.clone().sub(_camera.position).normalize();
-            var plane = new THREE.Plane(
-                nor, -nor.x*pos.x - nor.y*pos.y - nor.z*pos.z
-            );
-
-            // intersect plane
-            var point = _raycaster.ray.intersectPlane(plane);
-            //point = {x:1.0,y:0.0,z:0.0};
+            //console.log(ms.coords)
 
 
-            _simMat.uniforms.uInputPos.value[0].copy(point);
+
+            _simMat.uniforms.uInputPos.value[0].copy(points);
 
             _simMat.uniforms.uInputPosAccel.value.set(
                ms.buttons[0] ? 1.0 : -1.0,  0,  0,  0
             );
 
-            console.log(_simMat.uniforms.uInputPosAccel.value);
+            //console.log(_simMat.uniforms.uInputPosAccel.value);
         }
         else {
-          _simMat.uniforms.uInputPosAccel.value.set(0,0,0,0);
+          //console.log(point);
+          _simMat.uniforms.uInputPos.value[0].copy(points);
+          if (hand === 1){
+            _simMat.uniforms.uInputPosAccel.value.set(-1.0,0,0,0);
+          }else{
+            _simMat.uniforms.uInputPosAccel.value.set(1.0,0,0,0);
+          }
         }
 
 
@@ -215,6 +237,29 @@ var ParticleEngine = function(params) {
         _interactionPoint = value;
     };
 
+
+    client.onopen = function(e){
+      console.log('WebSocket Client Connected');
+
+          function sendNumber() {
+              if (client.readyState === client.OPEN) {
+                  var number = Math.round(Math.random() * 0xFFFFFF);
+                  client.send(number.toString());
+                  setTimeout(sendNumber, 1000);
+              }
+          }
+          sendNumber();
+      };
+
+    client.onclose = function() {
+        console.log('echo-protocol Client Closed');
+    };
+
+    client.onmessage = function(e) {
+        if (typeof e.data === 'string') {
+            _coords = e.data;
+        }
+    };
 
     // INIT
 

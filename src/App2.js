@@ -7,6 +7,8 @@ import UVMapAnimator from './UVMapAnimator'
 import Params from './Params'
 
 
+//sendMessage();*/
+
 var App = function() {
     var _gui, _guiFields;
     var _engine;
