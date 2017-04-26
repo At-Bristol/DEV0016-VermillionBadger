@@ -20,17 +20,7 @@ var App = function() {
     var _params = Params;
     var _interactionPoint;
 
-    /* DEFINES
-
-    var _params = {
-        size:2048,
-        simMat: createShaderMaterial(SimShader),
-        drawMat: createShaderMaterial(ParticleShader),
-        update: undefined,  // defined later in the file
-        autoRotateSpeed: 4.0,
-        cameraDistance: 25,
-        partcleAlpha: 0.025
-    };*/
+    //DEFINES
 
     var _simModes = [
         "SIM_PLANE",
@@ -233,7 +223,7 @@ var App = function() {
       },"keydown");
 
 
-        // pause simulationWWWwwwwwww
+        // pause simulation
         Mousetrap.bind("space", function() {
             console.log('space');
             _guiFields.paused = !_guiFields.paused;
@@ -273,8 +263,6 @@ var App = function() {
             });
         });
     };
-
-
 
     // RUN PROGRAM
 

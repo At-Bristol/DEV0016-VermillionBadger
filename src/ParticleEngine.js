@@ -11,7 +11,7 @@ import Gravitywell from './Gravitywell'
 
 var ParticleEngine = function(params) {
 
-   var client = new WebSocket('ws://127.0.0.1:1234', 'echo-protocol');
+    var client = new WebSocket('ws://127.0.0.1:1234', 'echo-protocol');
 
     var _this = this;
 
@@ -24,7 +24,7 @@ var ParticleEngine = function(params) {
     var _leapMan;
     var _customUpdate;
     var _pauseSim = false;
-    var _coords = '{"x":0, "y":0, "z":0}';
+    var _coords = [false];
 
 
     // PARAMS
@@ -125,51 +125,66 @@ var ParticleEngine = function(params) {
         _interactionPoint
         var ms = _mouse.getMouse(0);
         //raycast tp find gravity point
-        var point = JSON.parse(_coords);
-        var hand = point.w
-        delete point.z;
-        delete point.w;
-        var s = 1.2;
-        point.x = point.x * s;
-        point.y = point.y * s;
+
+        for(var i = 0; i < _coords.length; i++){
+          if(i>3){
+            break
+          }
+          console.log(i,_coords[i]);
+          if(_coords[i]){
+            var point = _coords[i];
+          }
+          else {
+            var point = false;
+          }
+
+          if(point){
+
+            var hand = point.w
+            delete point.z;
+            delete point.w;
+            var s = 1.2;
+            point.x = point.x * s;
+            point.y = point.y * s;
 
 
-        _raycaster.setFromCamera(point, _camera);
-        // from target point to camera
-        var pos = _controls.target;
-        var nor = pos.clone().sub(_camera.position).normalize();
-        var plane = new THREE.Plane(
-            nor, -nor.x*pos.x - nor.y*pos.y - nor.z*pos.z
-        );
-
-        // intersect plane
-        var points = _raycaster.ray.intersectPlane(plane);
-        //point = _coords ? _coords : {x:0.0,y:0.0,z:0.0};
-
-        if (ms.buttons[0] || (ms.buttons[2])) {
-
-            //console.log(ms.coords)
-
-
-
-            _simMat.uniforms.uInputPos.value[0].copy(points);
-
-            _simMat.uniforms.uInputPosAccel.value.set(
-               ms.buttons[0] ? 1.0 : -1.0,  0,  0,  0
+            _raycaster.setFromCamera(point, _camera);
+            // from target point to camera
+            var pos = _controls.target;
+            var nor = pos.clone().sub(_camera.position).normalize();
+            var plane = new THREE.Plane(
+                nor, -nor.x*pos.x - nor.y*pos.y - nor.z*pos.z
             );
 
-            //console.log(_simMat.uniforms.uInputPosAccel.value);
-        }
-        else {
-          //console.log(point);
-          _simMat.uniforms.uInputPos.value[0].copy(points);
-          if (hand === 1){
-            _simMat.uniforms.uInputPosAccel.value.set(-1.0,0,0,0);
-          }else{
-            _simMat.uniforms.uInputPosAccel.value.set(1.0,0,0,0);
+            // intersect plane
+            var points = _raycaster.ray.intersectPlane(plane);
+            //point = _coords ? _coords : {x:0.0,y:0.0,z:0.0};
+
+            if (ms.buttons[0] || (ms.buttons[2])) {
+                //console.log(ms.coords)
+                _simMat.uniforms.uInputPos.value[0].copy(points);
+
+                _simMat.uniforms.uInputPosAccel.value.set(
+                   ms.buttons[0] ? -1.0 : -1.0,  0,  0,  0
+                );
+                //console.log(_simMat.uniforms.uInputPosAccel.value);
+            }
+            else {
+              //console.log(point);
+              _simMat.uniforms.uInputPos.value[i].copy(points);
+              _simMat.uniforms.uInputPosAccel.value[i].copy(1.0);
+              console.log(  _simMat.uniforms.uInputPosAccel.value);
+              /*if (hand === 1){
+
+              }else{
+                _simMat.uniforms.uInputPosAccel.value.set(1.0,1.0,1.0,1.0);
+              }*/
+            }
+          }
+          else {
+            _simMat.uniforms.uInputPosAccel.value[i] = 1.0;
           }
         }
-
 
         // _debugBox.innerHTML +=
         //     "<br>"+_simMat.uniforms.uInputPosAccel.value.x.toFixed(2)
@@ -257,7 +272,7 @@ var ParticleEngine = function(params) {
 
     client.onmessage = function(e) {
         if (typeof e.data === 'string') {
-            _coords = e.data;
+          _coords = JSON.parse(e.data);
         }
     };
 
