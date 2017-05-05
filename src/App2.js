@@ -7,7 +7,7 @@ import UVMapAnimator from './UVMapAnimator'
 import Params from './Params'
 
 
-//sendMessage();*/
+//sendMessage();
 
 var App = function() {
     var _gui, _guiFields;
@@ -30,25 +30,22 @@ var App = function() {
         //"SIM_ROSE_GALAXY",
         //"SIM_GALAXY",
         //"SIM_NOISE",
-        "SIM_TEXTURE"
+        //"SIM_TEXTURE"
     ];
 
     // must have same name as preset, for async loading to work properly
     var _meshes = {
-        bear:      { scale:0.023, yOffset:-2.30, speed:0.05, url:"models/curious.json" },
+        bear:      { scale:0.023, yOffset:-2.30, speed:0.05, url:"models/logo.json" },
         curious:   { scale:0.020, yOffset:-2.00, speed:0.10, url:"models/curious.json" },
         deer:      { scale:0.040, yOffset:-2.00, speed:0.10, url:"models/deer.json" },
     };
 
     var _presets = {
-        "none":    { "user gravity":1.9, "shape gravity":1, _shape:"" },
+        "none":    { "user gravitfy":1.9, "shape gravity":1, _shape:"" },
         "sphere":  { "user gravity":1.9, "shape gravity":0.2, _shape:"SIM_SPHERE" },
-        //"bison":   { "user gravity":3, "shape gravity":5, _shape:_meshes.bison },
+        "deer":   { "user gravity":3, "shape gravity":5, _shape:_meshes.deer },
         //"wolf":    { "user gravity":3, "shape gravity":5, _shape:_meshes.wolf },
     };
-
-
-
     // FUNCTIONS
 
     var _setSimMode = function(name) {
@@ -215,12 +212,6 @@ var App = function() {
     };
 
     var _initKeyboard = function() {
-
-      // change interaction point
-     Mousetrap.bind(["1","2","3","4","5","6","7","8"], function(e) {
-          _engine.changeInteractionPoint(e.key);
-          return false;
-      },"keydown");
 
 
         // pause simulation

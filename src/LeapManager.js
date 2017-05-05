@@ -42,23 +42,6 @@ var LeapManager = function(renderer, camera, transform) {
             this.palmPositions[h].set(pos[0],pos[1],pos[2]);
             this.palmPositions[h].applyMatrix4(_root.matrix);
         }
-
-        // this.activeJointCount = this.activeHandCount * 25;
-
-        // extract joint positions
-        // var jointIdx = 0;
-        // for (var h=0; h<this.frame.hands.length; h++) {
-        //     var hand = this.frame.hands[h];
-        //     for (var f=0; f<hand.fingers.length; f++) {
-        //         var finger = hand.fingers[f];
-        //         for (var j=0; j<finger.positions.length; j++) {
-        //             var rawpos = finger.positions[j];
-        //             this.jointPositions[jointIdx].set(rawpos[0],rawpos[1],rawpos[2]);
-        //             this.jointPositions[jointIdx].applyMatrix4(_root.matrix);
-        //             jointIdx++;
-        //         }
-        //     }
-        // }
     };
 
     this.render = function(renderTarget, forceClear) {

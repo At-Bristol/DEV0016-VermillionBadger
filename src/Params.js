@@ -11,7 +11,9 @@ var Params = {
     cameraDistance: 25,
     partcleAlpha: 0.5,
     shapeAccel: 0.2,
-    inputAccel: 1.9
+    inputAccel: 1.9,
+    mouse: true,
+    kinect: true,
 };
 
 export default Params

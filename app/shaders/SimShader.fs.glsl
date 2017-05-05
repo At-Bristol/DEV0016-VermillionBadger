@@ -14,10 +14,6 @@ uniform vec4 uInputPosAccel;
 uniform float uInputAccel;
 uniform float uShapeAccel;
 
-#ifdef SIM_TEXTURE
-uniform sampler2D tTarget;
-#endif
-
 void main() {
 
     // read data
