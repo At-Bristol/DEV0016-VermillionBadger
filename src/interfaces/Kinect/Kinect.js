@@ -1,36 +1,18 @@
-import { kinect } from './Params'
 
-var _RouteArray = function(input, oLength) {
-  var output = [];
-  for (var i = 0; i < input.length; i++) {
-    if (input[i]) {
-      for (var a = 0; a < oLength; a++) {
-        if (!output[a]) {
-          output[a] = i;
-          break;
-        };
-      };
-    };
-  };
-  return output;
-};
+var Kinect = function(){
 
-var KinectClient = function() {
-
+  console.log('yo');
+  //intial props
+  this.decayRate = 100;
   this.coords = 'false';
-  this.range = kinect.range || 1;
-  this.maxUsers = kinect.maxUsers || 1;
-  this.decayRate = kinect.decayRate || 1000;
-  this.decayThreshold = kinect.decayThreshold || 0.01;
 
-  var _socket = false;
-  var _rawCoords = [];
-  var _coords = []
-  var _isRecievingData = false
-  var _prevAccel= [];
+  var _prevAccel = [];
   var _decay = [];
+  var _socket = false;
+  var _coords = [];
+  var _isRecievingData = false
 
-  var init = function() {
+  init = function() {
     if (!_socket) {
       _socket = new WebSocket('ws://127.0.0.1:1234', 'echo-protocol');
     };
@@ -52,7 +34,7 @@ var KinectClient = function() {
       console.log('Recieving kinect data from server');
     }
     if (typeof e.data === 'string') {
-      _rawCoords = JSON.parse(e.data);
+      _coords = JSON.parse(e.data);
     };
   };
 
@@ -60,19 +42,19 @@ var KinectClient = function() {
     console.log('Kinect Client not connected at ', _socket.url, ' Is server turned on? npm run server')
   };
 
-  this.getRawCoords = function() {
-    return _rawCoords;
+  this.getCoords = function() {
+    return _coords;
   };
 
-  this.update = function() {
+  this.update = function(decayRate) {
 
-    var _rawcoords = this.getRawCoords();
+    var _rawcoords = this.getCoords();
 
     //map array from 6 inputs to 4
+    var _numberOfInputs = 4;
+    var _routing = _RouteArray(_rawcoords, _numberOfInputs);
 
-    var _routing = _RouteArray(_rawcoords, this.maxUsers);
-
-    for (var i = 0; i < this.maxUsers; i++) {
+    for (var i = 0; i < _numberOfInputs; i++) {
       if (!_rawcoords[_routing[i]]) {
         _coords[i] = false;
       } else {
@@ -80,31 +62,53 @@ var KinectClient = function() {
       };
     };
 
+    if (!decayRate) {
+      decayRate = 0;
+    };
+
     for (var i = 0; i < _coords.length; i++) {
       if (_coords[i]) {
+        _raycaster.setFromCamera(_coords[i], _camera);
 
-        _coords[i].x *= this.range;
-        _coords[i].y *= this.range;
-        _coords[i].z *= this.range;
+        // from target point to camera
+        var pos = _controls.target;
+        var nor = pos.clone().sub(_camera.position).normalize();
+        var plane = new THREE.Plane(
+          nor, -nor.x * pos.x - nor.y * pos.y - nor.z * pos.z
+        );
 
         var accel = new THREE.Vector3(_coords[i].x, _coords[i].y, _coords[i].z).length();
 
         var acceldif = Math.abs(_prevAccel[i] - accel);
 
         if (acceldif < 0.01) {
-          _decay[i] = _decay[i] - (this.decayRate / 10000);
-          _decay[i] = Math.max(_decay[i], 0)
+          _decay[i] = _decay[i] - (decayRate / 10000);
+          _decay[i] = Math.max(_decay, 0)
         } else {
           _decay[i] = 1.0;
         };
 
-        _coords[i].decay = _decay[i];
         _prevAccel[i] = accel;
       };
     };
     return _coords
-  }.bind(this);
-
+  };
 };
 
-export default KinectClient
+export default Kinect
+
+
+var _RouteArray = function(input, oLength) {
+  var output = [];
+  for (var i = 0; i < input.length; i++) {
+    if (input[i]) {
+      for (var a = 0; a < oLength; a++) {
+        if (!output[a]) {
+          output[a] = i;
+          break;
+        };
+      };
+    };
+  };
+  return output;
+};

@@ -36,7 +36,7 @@ var App = function() {
     // must have same name as preset, for async loading to work properly
     var _meshes = {
         bear:      { scale:0.023, yOffset:-2.30, speed:0.05, url:"models/logo.json" },
-        curious:   { scale:0.020, yOffset:-2.00, speed:0.10, url:"models/curious.json" },
+        //curious:   { scale:0.020, yOffset:-2.00, speed:0.10, url:"models/curious.json" },
         deer:      { scale:0.040, yOffset:-2.00, speed:0.10, url:"models/deer.json" },
     };
 
@@ -163,7 +163,7 @@ var App = function() {
             "screenshot": _takeScreenshot,
             "fullscreen": Utils.toggleFullscreen,
             "take tour!": _tourMode,
-            "music": true,
+            "music": false,
         };
 
         _gui.add(_guiFields, "shape", Object.keys(_presets))

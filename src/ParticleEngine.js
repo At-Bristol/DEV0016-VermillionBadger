@@ -8,8 +8,7 @@ import RenderContext from './RenderContext'
 import ParticleSimulation from './ParticleSimulation'
 import LeapManager from './LeapManager'
 import Utils from './Utils'
-import Gravitywell from './Gravitywell'
-import KinectClient from './KinectClient'
+import Kinect from './KinectClient'
 
 
 var ParticleEngine = function(params) {
@@ -44,6 +43,10 @@ var ParticleEngine = function(params) {
   var _cameraDistance = params.cameraDistance || 25;
   var _customUpdate = params.update;
   var _particleAlpha = params.particleAlpha;
+//  var _prevAccel = [];
+//  var _decay = [];
+//  var _prevAccel = new THREE.Vector3(0,0,0);
+
 
 
   // EVENTS
@@ -93,9 +96,8 @@ var ParticleEngine = function(params) {
     }
 
     if (_kinect) {
-      _kinect = new KinectClient();
+      _kinect = new Kinect();
     }
-    _gravitywell = new Gravitywell();
 
     _renderer = new RenderContext(_canvas);
     _renderer.init();
@@ -173,30 +175,11 @@ var ParticleEngine = function(params) {
     return output;
   };
 
-  var _prevAccel = new THREE.Vector3(0,0,0);
+  var _renderUpdate = function(coords) {
 
-  var _kinectUpdate = function() {
-
-    var _rawcoords = _kinect.getCoords();
-
-    //routes the 6 potential inputs to the first 4 required for vec 4 map
-    //TODO make sure old skeletons are dumped
-    var _routing = _RouteArray(_rawcoords, 4);
-
-
-    for (var i = 0; i < 4; i++) {
-      if (!_rawcoords[_routing[i]]) {
-        _coords[i] = false;
-      } else {
-        _coords[i] = _rawcoords[_routing[i]]
-      }
-    }
-
-
-    for (var i = 0; i < _coords.length; i++) {
-      if (_coords[i]) {
-        //var ms = _mouse.getMouse(mId);
-        _raycaster.setFromCamera(_coords[i], _camera);
+    for (var i = 0; i < coords.length; i++) {
+      if (coords[i]) {
+        _raycaster.setFromCamera(coords[i], _camera);
 
         // from target point to camera
         var pos = _controls.target;
@@ -205,33 +188,15 @@ var ParticleEngine = function(params) {
           nor, -nor.x * pos.x - nor.y * pos.y - nor.z * pos.z
         );
 
-        var accel = new THREE.Vector3(_coords[i].x,_coords[i].y,_coords[i].z).length();
-
-        var acceldif = _prevAccel - accel;
-
-
-        if(acceldif < 0.01){
-          _scalar = _scalar - 1;
-          _scalar = Math.max(_scalar,0)
-        }else{
-          _scalar = 100;
-        }
-
-
         // intersect plane
         var point = _raycaster.ray.intersectPlane(plane);
 
         _simMat.uniforms.uInputPos.value[i].copy(point);
-        _simMat.uniforms.uInputPosAccel.value.setComponent(i, _coords[i].w ? -1.0 : 1.0);
+        _simMat.uniforms.uInputPosAccel.value.setComponent(i, coords[i].w ? -1.0 * coords[i].decay : 1.0 * coords[i].decay);
 
-        _prevAccel = accel;
-      }
-    }
-
-
-
+      };
+    };
   };
-
 
   var _leapUpdate = function() {
     var K_PULL = 1.0; // in grabStrength
@@ -262,7 +227,7 @@ var ParticleEngine = function(params) {
     //if (!_controls.enabled) _mouseUpdate();
     if (_mouse) _mouseUpdate();
     if (_leap) _leapUpdate();
-    if (_kinect) _kinectUpdate();
+    if (_kinect) _renderUpdate(_kinect.update());
   };
 
 
@@ -286,11 +251,6 @@ var ParticleEngine = function(params) {
 
   this.enableCameraControl = function(value) {
     _controls.enabled = value;
-  };
-
-  this.changeInteractionPoint = function(value) {
-    console.log(_interactionPoint);
-    _interactionPoint = value;
   };
 
   // INIT

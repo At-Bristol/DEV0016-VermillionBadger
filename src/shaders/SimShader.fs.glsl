@@ -244,6 +244,14 @@ uniform float uInputAccel;
 uniform float uShapeAccel;
 
 
+float normaldist(float midpoint, float axis, float spread){
+  float v = pow(spread,2.0);
+  float e = -( pow(axis-midpoint,2.0)  / (2.0 * v) );
+  float t = 1.0/( sqrt(2.0 * M_PI * v) );
+  return pow(t,e);
+}
+
+
 void main() {
 
     // read data
@@ -254,8 +262,6 @@ void main() {
     // CALC ACCEL
 
     vec3 accel = vec3(0.0);
-
-    {
 
     #ifdef SIM_SPHERE
         // sphere, continuous along vUv.y
@@ -280,20 +286,14 @@ void main() {
             accel += uShapeAccel * toTarget/toTargetLength;
     #endif
 
-    }
+    #define PROCESS_INPUT_POS(ACC, POS, NUM, NUM2) if ((ACC) != 0.0) { vec3 toCenter = (POS)-currPos; float toCenterLength = length(toCenter); accel += ((toCenter/toCenterLength) * (ACC)*uInputAccel/toCenterLength) * ((((vUv.x * NUM) + NUM2)+0.3)*3.2); }
 
-
-    {
-
-    #define PROCESS_INPUT_POS(ACC, POS) if ((ACC) != 0.0) { vec3 toCenter = (POS)-currPos; float toCenterLength = length(toCenter); accel += (toCenter/toCenterLength) * (ACC)*uInputAccel/toCenterLength; }
-
-    PROCESS_INPUT_POS(uInputPosAccel.x, uInputPos[0]);
+    PROCESS_INPUT_POS(uInputPosAccel.x, uInputPos[0],1.0,0.0);
     #ifdef MULTIPLE_INPUT
-      PROCESS_INPUT_POS(uInputPosAccel.y, uInputPos[1]);
-      PROCESS_INPUT_POS(uInputPosAccel.z, uInputPos[2]);
-      PROCESS_INPUT_POS(uInputPosAccel.w, uInputPos[3]);
+      PROCESS_INPUT_POS(uInputPosAccel.y, uInputPos[1],-1.0,1.0);
+      PROCESS_INPUT_POS(uInputPosAccel.z, uInputPos[2],1.0,0.0);
+      PROCESS_INPUT_POS(uInputPosAccel.w, uInputPos[3],-1.0,1.0);
     #endif
-    }
 
     // state updates
     vel = K_VEL_DECAY * vel + accel * uDeltaT;

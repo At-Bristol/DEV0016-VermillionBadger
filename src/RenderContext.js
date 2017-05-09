@@ -1,3 +1,5 @@
+var bufferTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
+
 var RenderContext = function(canvas) {
 
     // PRIVATE VARS

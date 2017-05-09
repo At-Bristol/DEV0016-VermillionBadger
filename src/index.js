@@ -11,11 +11,6 @@ var showHelpBox = function(show) {
     }
 };
 
-// show help box for first time
-if (!localStorage["iamnop.particles.helpShown"]) {
-    helpBox.classList.remove("hidden");
-    localStorage["iamnop.particles.helpShown"] = true;
-}
 
 // start app
 var app = new App();

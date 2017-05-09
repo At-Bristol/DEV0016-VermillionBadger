@@ -13,6 +13,7 @@ varying vec3 vColor;
 uniform float uTime;
 uniform float uAlpha;
 
+
 void main() {
 
     // calc alpha for shape
